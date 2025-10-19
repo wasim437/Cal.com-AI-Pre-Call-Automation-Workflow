@@ -1,0 +1,730 @@
+{
+  "name": "CAL.COM",
+  "nodes": [
+    {
+      "parameters": {
+        "events": [
+          "BOOKING_CREATED"
+        ],
+        "options": {}
+      },
+      "type": "n8n-nodes-base.calTrigger",
+      "typeVersion": 2,
+      "position": [
+        -1480,
+        -40
+      ],
+      "id": "13007e42-0985-451c-996c-3d93d95cad08",
+      "name": "Cal.com Trigger1",
+      "webhookId": "8ea0bd9f-65cd-4400-80f0-ae949848812f"
+    },
+    {
+      "parameters": {
+        "jsCode": "// Main input object\nconst data = items[0].json;\n\n// Step 1: Normalize eventDescription formatting\nlet desc = data.eventDescription || \"\";\n\n// Replace line breaks and <br> tags with real newlines\ndesc = desc.replace(/<br\\s*\\/?>/gi, '\\n').replace(/\\r\\n|\\r/g, '\\n');\n\n// Remove markdown links like [label](url) → just keep the URL\ndesc = desc.replace(/\\[([^\\]]+)\\]\\((https?:\\/\\/[^\\)]+)\\)/gi, '$2');\n\n// === Helper function to extract fields ===\nconst extract = (label) => {\n  const regex = new RegExp(`${label}:\\\\s*(.*?)(\\\\n|$)`, 'i');\n  const match = desc.match(regex);\n  if (!match) return null;\n\n  let value = match[1].trim();\n\n  // Clean up common unwanted text (e.g., [null], [Missing])\n  value = value.replace(/\\[.*?\\]/g, '').trim();\n  return value.length > 0 ? value : null;\n};\n\n// === Validations ===\nconst validateCompany = (val) => val && /^[A-Za-z0-9&()\\-'.\\s]{2,}$/.test(val);\nconst validateWebsite = (val) => val && /^https?:\\/\\/[^\\s]+$/i.test(val);\nconst validateUseCase = (val) => {\n  if (!val) return false;\n  const lower = val.toLowerCase().trim();\n  return !['null', 'missing', ''].includes(lower);\n};\n\n// === Extract fields ===\nconst rawCompany = extract(\"Company\");\nconst rawWebsite = extract(\"Website\");\nconst rawUseCase = extract(\"Use Case\");\n\nconst company = validateCompany(rawCompany) ? rawCompany : null;\nconst website = validateWebsite(rawWebsite) ? rawWebsite : null;\nconst use_case = validateUseCase(rawUseCase) ? rawUseCase : null;\n\nconst email = extract(\"Email\");\nconst subject = extract(\"Subject\");\nconst industry = extract(\"Industry\");\nconst meeting_time = extract(\"Meeting Time\");\nconst meeting_link = extract(\"Meeting Link\");\nconst contact_name = extract(\"Contact Name\");\n\n// === Final Output ===\nreturn [\n  {\n    json: {\n      // Static from payload\n      booking_id: data.bookingId || null,\n      meeting_title: data.eventTitle || null,\n      meeting_status: data.status || null,\n      duration_minutes: data.length || null,\n      video_call_url: data.metadata?.videoCallUrl || null,\n      calendar_success: data.appsStatus?.[0]?.success === 1,\n      meet_success: data.appsStatus?.[1]?.success === 1,\n\n      // Extracted\n      email,\n      subject,\n      company,\n      industry,\n      use_case,\n      website,\n      meeting_time,\n      meeting_link,\n      contact_name\n    }\n  }\n];\n"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -1320,
+        -40
+      ],
+      "id": "a090a2b8-a571-49e4-b354-3dfddbd8dcf6",
+      "name": "Code"
+    },
+    {
+      "parameters": {
+        "operation": "appendOrUpdate",
+        "documentId": {
+          "__rl": true,
+          "value": "18YonO-4R0GI9Wf-d3vZdAykbCQtaBlKcX3iOhn8Fn5I",
+          "mode": "list",
+          "cachedResultName": "AI PRE CALL NOTEBOOK INFO",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/18YonO-4R0GI9Wf-d3vZdAykbCQtaBlKcX3iOhn8Fn5I/edit?usp=drivesdk"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": "gid=0",
+          "mode": "list",
+          "cachedResultName": "Sheet1",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/18YonO-4R0GI9Wf-d3vZdAykbCQtaBlKcX3iOhn8Fn5I/edit#gid=0"
+        },
+        "columns": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "booking_id": "={{ $json.booking_id }}",
+            "meeting_title": "={{ $json.meeting_title }}",
+            "meeting_status": "={{ $json.meeting_status }}",
+            "duration_minutes": "={{ $json.duration_minutes }}",
+            "video_call_url": "={{ $json.video_call_url }}",
+            "calendar_succes": "={{ $json.calendar_success }}",
+            "meet_success": "={{ $json.meet_success }}",
+            "email": "={{ $json.email }}",
+            "subject": "={{ $json.subject }}",
+            "company": "={{ $json.company }}",
+            "industry": "={{ $json.industry }}",
+            "use_case": "={{ $json.use_case }}",
+            "website": "={{ $json.website }}",
+            "meeting_time": "={{ $json.meeting_time }}",
+            "meeting_link": "={{ $json.meeting_link }}",
+            "contact_name": "={{ $json.contact_name }}"
+          },
+          "matchingColumns": [
+            "booking_id"
+          ],
+          "schema": [
+            {
+              "id": "booking_id",
+              "displayName": "booking_id",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "meeting_title",
+              "displayName": "meeting_title",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "meeting_status",
+              "displayName": "meeting_status",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "duration_minutes",
+              "displayName": "duration_minutes",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "video_call_url",
+              "displayName": "video_call_url",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "calendar_succes",
+              "displayName": "calendar_succes",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "meet_success",
+              "displayName": "meet_success",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "email",
+              "displayName": "email",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "subject",
+              "displayName": "subject",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "company",
+              "displayName": "company",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "industry",
+              "displayName": "industry",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "use_case",
+              "displayName": "use_case",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "website",
+              "displayName": "website",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "meeting_time",
+              "displayName": "meeting_time",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "meeting_link",
+              "displayName": "meeting_link",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "contact_name",
+              "displayName": "contact_name",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            }
+          ],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": false
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.6,
+      "position": [
+        -1180,
+        -40
+      ],
+      "id": "4a4453d3-ebd8-48b3-b61f-a5ef3255731f",
+      "name": "Google Sheets"
+    },
+    {
+      "parameters": {
+        "documentId": {
+          "__rl": true,
+          "value": "18YonO-4R0GI9Wf-d3vZdAykbCQtaBlKcX3iOhn8Fn5I",
+          "mode": "list",
+          "cachedResultName": "AI PRE CALL NOTEBOOK INFO",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/18YonO-4R0GI9Wf-d3vZdAykbCQtaBlKcX3iOhn8Fn5I/edit?usp=drivesdk"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": "gid=0",
+          "mode": "list",
+          "cachedResultName": "Sheet1",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/18YonO-4R0GI9Wf-d3vZdAykbCQtaBlKcX3iOhn8Fn5I/edit#gid=0"
+        },
+        "filtersUI": {
+          "values": [
+            {
+              "lookupColumn": "booking_id",
+              "lookupValue": "={{ $json.booking_id }}"
+            }
+          ]
+        },
+        "combineFilters": "OR",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.6,
+      "position": [
+        -1000,
+        -40
+      ],
+      "id": "8a7b2cd2-8740-44a9-bbde-c080b712b296",
+      "name": "Google Sheets1"
+    },
+    {
+      "parameters": {
+        "url": "={{ $json.website }}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        -540,
+        0
+      ],
+      "id": "1e5ed8de-a8ca-4c44-86b9-fa0fac61f99b",
+      "name": "HTTP Request"
+    },
+    {
+      "parameters": {
+        "jsCode": "// Get HTML content from HTTP Request\nconst html = $input.first().json.data || '';\n\n// Clean and normalize the text\nconst textOnly = html\n  .replace(/<script[^>]*>[\\s\\S]*?<\\/script>/gi, '')  // Remove script tags\n  .replace(/<style[^>]*>[\\s\\S]*?<\\/style>/gi, '')    // Remove style tags\n  .replace(/<\\/?[^>]+(>|$)/g, '')                    // Remove all HTML tags\n  .replace(/\\s+/g, ' ')                              // Replace multiple spaces with a single space\n  .trim();                                           // Trim leading/trailing spaces\n\n// Return plain text\nreturn [\n  {\n    json: {\n      plainText: textOnly\n    }\n  }\n];\n"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -360,
+        0
+      ],
+      "id": "204bb81e-9592-43c9-9f08-139f49c18b4f",
+      "name": "Code1"
+    },
+    {
+      "parameters": {},
+      "type": "n8n-nodes-serpapi.serpApi",
+      "typeVersion": 1,
+      "position": [
+        -520,
+        220
+      ],
+      "id": "bc8c0271-7294-47f4-bf2e-4c080b4ff337",
+      "name": "SerpApi"
+    },
+    {
+      "parameters": {
+        "jsCode": "const data = items[0].json;\n\nconst results = data.organic_results || [];\n\n// Keywords to identify useful results\nconst relevantKeywords = ['company profile', 'about', 'funding', 'investors', 'calendar productivity'];\n\n// Extract and clean relevant results\nconst extracted = results\n  .filter(r => {\n    const title = (r.title || \"\").toLowerCase();\n    const snippet = (r.snippet || \"\").toLowerCase();\n    const link = (r.link || \"\").toLowerCase();\n    \n    // Exclude Cal.com and check if relevant\n    return !link.includes('cal.com') &&\n      relevantKeywords.some(keyword => title.includes(keyword) || snippet.includes(keyword));\n  })\n  .map(r => ({\n    title: r.title?.trim() || null,\n    description: r.snippet?.trim() || null,\n    url: r.link || null,\n    source_icon: r.favicon || null\n  }));\n\nreturn [\n  {\n    json: {\n      company_name: \"Loopin\",\n      total_results: extracted.length,\n      company_profiles: extracted.length > 0 ? extracted : \"No valid company data found.\"\n    }\n  }\n];\n"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -340,
+        220
+      ],
+      "id": "3272ffae-0e1a-4289-82d9-635c6120970b",
+      "name": "Code2"
+    },
+    {
+      "parameters": {
+        "aggregate": "aggregateAllItemData",
+        "destinationFieldName": "=",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.aggregate",
+      "typeVersion": 1,
+      "position": [
+        -540,
+        -160
+      ],
+      "id": "63e448e1-5fc0-4212-a742-182d1cdaa12f",
+      "name": "Aggregate"
+    },
+    {
+      "parameters": {
+        "promptType": "define",
+        "text": "=Generate only the HTML code for a professional pre-summary AI call email using the following extracted details:\n({{ $('Google Sheets1').item.json.booking_id }} {{ $('Google Sheets1').item.json.meeting_title }} {{ $('Google Sheets1').item.json.meeting_status }} {{ $('Google Sheets1').item.json.duration_minutes }} {{ $('Google Sheets1').item.json.video_call_url }} {{ $('Google Sheets1').item.json.calendar_succes }} {{ $('Google Sheets1').item.json.meet_success }} {{ $('Google Sheets1').item.json.email }} {{ $('Google Sheets1').item.json.subject }} {{ $('Google Sheets1').item.json.company }} {{ $('Google Sheets1').item.json.industry }} {{ $('Google Sheets1').item.json.meeting_time }} {{ $('Google Sheets1').item.json.meeting_link }} {{ $('Google Sheets1').item.json.contact_name }})\n\n\nProfessional Pre-Call Email Template Prompt\n\nPurpose: Create a concise, professional, and friendly email template for pre-meeting communication with potential clients, pulling data from Google Sheets.\n\nKey Requirements:\n\nCheck if use case exists ({{ $('Google Sheets').item.json.use_case }}), or else use the scraped website details ({{ $json[''][0].output }})\n\nUse all provided Google Sheets fields exactly as formatted\n\nMaintain the original message intent while correcting grammar\n\nBold headings only (no extra formatting)\n\nNo extra line breaks between paragraphs\n\nKeep conditional logic for use cases\n\nInclude 2–3 automation examples when no use case is provided\n\n\ngive in box html template \n\n\nHi [Contact Name],\n\nHope you're doing well!\n\nI'm Mohamed Wasim from Axtrlabs, a team of automation specialists focused on building powerful, low-code solutions using n8n. We help companies like yours streamline operations and eliminate repetitive tasks using smart, tailored workflows. Thanks for booking a call regarding \"[Meeting Title]\" scheduled for [Meeting Date, Time]. We're excited to learn about [Company Name] and explore how we can assist.\n\nCompany Overview\n1 to 6 lines describing the company using use cases\n\nIf use case exists: ({{ $('Google Sheets').item.json.use_case }})\nIn our session, we'll explore automating [Use Case] to help your team focus on growth rather than manual work. We'll demonstrate how this creates impact without disrupting your current tools.\n\nIf no use case: ({{ $json[''][0].output }})\nAfter reviewing your website, I identified automation opportunities in areas like:\n\ngive three example flows what compnay really needs\n\ngive[Example workflow 1: e.g., related use cases the company needs and what automation can achieve]\ngive [Example workflow 2: e.g., related use cases the company needs and what automation can achieve]\ngive[Example workflow 3: e.g., related use cases the company needs and what automation can achieve]\n\nLooking forward to sharing tailored automation ideas for your business.\n\nOur Recent Services\nHere are two recent workflow automations we implemented using n8n, relevant to your needs:\n[Workflow Automation Example 1 – related to industry]\n[Workflow Automation Example 2 – related to company use case]\n\nClosing:\nVideo Call Link: [Video Call Link]\nExcited to explore solutions for [Company Name].\n\nBest regards,\nMohamed Wasim\nn8n Developer | Axtrlabs\n\n",
+        "hasOutputParser": true,
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.agent",
+      "typeVersion": 2,
+      "position": [
+        -300,
+        -180
+      ],
+      "id": "1a12e024-452e-4b61-a05b-ece9001f267b",
+      "name": "AI Agent"
+    },
+    {
+      "parameters": {
+        "rules": {
+          "values": [
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 2
+                },
+                "conditions": [
+                  {
+                    "leftValue": "={{ $json.use_case }}",
+                    "rightValue": "",
+                    "operator": {
+                      "type": "string",
+                      "operation": "notEquals"
+                    },
+                    "id": "8b0f36d7-b919-4359-b57f-a22c0de8c0a8"
+                  }
+                ],
+                "combinator": "and"
+              }
+            },
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 2
+                },
+                "conditions": [
+                  {
+                    "id": "bf1e15ed-0494-45d5-bdc6-e935d52efba8",
+                    "leftValue": "={{ $json.website }}",
+                    "rightValue": "",
+                    "operator": {
+                      "type": "string",
+                      "operation": "notEquals"
+                    }
+                  }
+                ],
+                "combinator": "and"
+              }
+            },
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 2
+                },
+                "conditions": [
+                  {
+                    "id": "4547a360-50d4-489b-938b-67f556299228",
+                    "leftValue": "={{ $json.company }}",
+                    "rightValue": "",
+                    "operator": {
+                      "type": "string",
+                      "operation": "contains"
+                    }
+                  }
+                ],
+                "combinator": "and"
+              }
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.switch",
+      "typeVersion": 3.2,
+      "position": [
+        -800,
+        20
+      ],
+      "id": "6cec9d77-cf0d-42d6-91e5-9da4e7416d1a",
+      "name": "Switch"
+    },
+    {
+      "parameters": {
+        "sendTo": "={{ $('Google Sheets1').item.json.email.replace(/mailto:|\\(|\\)/g, '') }}",
+        "subject": "=Subject:{{ $('Google Sheets1').item.json.subject }} Booking_id {{ $('Google Sheets1').item.json.booking_id }} Let’s Prepare for {{ $('Google Sheets1').item.json.meeting_title }}",
+        "message": "={{ $json.output.replace(/^```html\\s*|\\s*```$/g, '') }}\n",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.gmail",
+      "typeVersion": 2.1,
+      "position": [
+        180,
+        -180
+      ],
+      "id": "ccd6be01-ac92-47f7-bde8-59ab89927f9d",
+      "name": "Gmail1",
+      "webhookId": "c7b90078-3126-4fcc-a541-340b3eb4e807"
+    },
+    {
+      "parameters": {
+        "modelName": "models/gemini-2.5-pro",
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.lmChatGoogleGemini",
+      "typeVersion": 1,
+      "position": [
+        -180,
+        -20
+      ],
+      "id": "68118155-657c-41b0-b4a8-1a611e13eb60",
+      "name": "Google Gemini Chat Model"
+    },
+    {
+      "parameters": {
+        "promptType": "define",
+        "text": "=\"Hey Gemini, you are a helpful assistant. Below are the extracted details of a company. Please provide a company overview and possible use cases based on this information.\"\n\n(Then paste the actual extracted company details here instead of {{ $json.plainText }}.)\n\nExample Output Structure (if details were provided):\nCompany Overview\nName: [Company Name]\n\nIndustry: [Sector/Industry]\n\nKey Products/Services: [List major offerings]\n\nTarget Market: [Primary customers/clients]\n\nUnique Value Proposition: [What sets them apart]\n\nUse Cases\nFor Businesses: [How other companies might use their services]\n\nFor Consumers: [If applicable, how end-users benefit]\n\nIndustry Applications: [Specific scenarios in their sector]",
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.agent",
+      "typeVersion": 2,
+      "position": [
+        0,
+        0
+      ],
+      "id": "0b4d87dc-16ea-4d08-8a3c-9e41eb9d0cb8",
+      "name": "AI Agent1"
+    },
+    {
+      "parameters": {
+        "modelName": "models/gemini-2.5-pro",
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.lmChatGoogleGemini",
+      "typeVersion": 1,
+      "position": [
+        -180,
+        140
+      ],
+      "id": "6dac7539-ff38-42b8-a004-703bc1ec9552",
+      "name": "Google Gemini Chat Model1"
+    },
+    {
+      "parameters": {
+        "promptType": "define",
+        "text": "=\"Hey Gemini, you are a helpful assistant. Below are the extracted details of a company. Please provide a company overview and possible use cases based on this information.\"\n\n(Then paste the actual extracted company details here instead of {{ $json.plainText }}.)\n\nExample Output Structure (if details were provided):\nCompany Overview\nName: [Company Name]\n\nIndustry: [Sector/Industry]\n\nKey Products/Services: [List major offerings]\n\nTarget Market: [Primary customers/clients]\n\nUnique Value Proposition: [What sets them apart]\n\nUse Cases\nFor Businesses: [How other companies might use their services]\n\nFor Consumers: [If applicable, how end-users benefit]\n\nIndustry Applications: [Specific scenarios in their sector]",
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.agent",
+      "typeVersion": 2,
+      "position": [
+        100,
+        200
+      ],
+      "id": "1980c17f-d51e-467d-b36f-f3a164dfd6d3",
+      "name": "AI Agent2"
+    },
+    {
+      "parameters": {
+        "modelName": "models/gemini-2.5-pro",
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.lmChatGoogleGemini",
+      "typeVersion": 1,
+      "position": [
+        -180,
+        300
+      ],
+      "id": "0c2a18c4-3056-463a-a8d9-ce52ea15e733",
+      "name": "Google Gemini Chat Model2"
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "Cal.com Trigger1": {
+      "main": [
+        [
+          {
+            "node": "Code",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Code": {
+      "main": [
+        [
+          {
+            "node": "Google Sheets",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Google Sheets": {
+      "main": [
+        [
+          {
+            "node": "Google Sheets1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Google Sheets1": {
+      "main": [
+        [
+          {
+            "node": "Switch",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "HTTP Request": {
+      "main": [
+        [
+          {
+            "node": "Code1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Code2": {
+      "main": [
+        [
+          {
+            "node": "AI Agent2",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Code1": {
+      "main": [
+        [
+          {
+            "node": "AI Agent1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Aggregate": {
+      "main": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "AI Agent": {
+      "main": [
+        [
+          {
+            "node": "Gmail1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Switch": {
+      "main": [
+        [
+          {
+            "node": "Aggregate",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "HTTP Request",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "SerpApi",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Google Gemini Chat Model": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "AI Agent1": {
+      "main": [
+        [
+          {
+            "node": "Aggregate",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Google Gemini Chat Model1": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "AI Agent1",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Google Gemini Chat Model2": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "AI Agent2",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "AI Agent2": {
+      "main": [
+        [
+          {
+            "node": "Aggregate",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "SerpApi": {
+      "main": [
+        [
+          {
+            "node": "Code2",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": false,
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "versionId": "645827e8-fc0e-4b10-86eb-4043c5fafb5d",
+  "meta": {
+    "templateCredsSetupCompleted": true,
+    "instanceId": "c6d6d03df861f2ae335996de0417b12064071276031df87f41a1cb202e28e898"
+  },
+  "id": "90ZPz76lEYVyL200",
+  "tags": []
+}
